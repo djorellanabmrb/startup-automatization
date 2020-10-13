@@ -12,7 +12,7 @@ services:
     ingress:
         image: traefik:v2.0
         command:
-            - "--api.insecure=true"
+            - "--api.insecure=false"
             - "--providers.docker"
             - "--providers.docker.watch=true"
             - "--providers.docker.exposedByDefault=false"
@@ -21,7 +21,6 @@ services:
             - "--entryPoints.web.address=:80"
         ports:
             - "80:80"
-            - "8080:8080"
         networks:
             - private-network
         volumes:
@@ -96,7 +95,7 @@ services:
             - postgis
         labels:
             - traefik.enable=true
-            - traefik.http.routers.authentication.rule=Host(`localhost`) && Path(`/authentication/*`)
+            - traefik.http.routers.authentication.rule=PathPrefix(`/authentication`)
             - traefik.http.routers.authentication.entryPoints=web
             - traefik.http.routers.authentication.service=authentication-service
             - traefik.http.services.authentication-service.loadbalancer.server.port=${API_AUTHENTICATION_PORT}
@@ -172,7 +171,7 @@ services:
             - ${API_SECURITY_PORT}:${API_SECURITY_PORT}            
         labels:
             - traefik.enable=true
-            - traefik.http.routers.security.rule=Host(`localhost`) && Path(`/security`)
+            - traefik.http.routers.security.rule=PathPrefix(`/security`)
             - traefik.http.routers.security.entryPoints=web
             - traefik.http.routers.security.service=security-service
             - traefik.http.services.security-service.loadbalancer.server.port=${API_SECURITY_PORT}

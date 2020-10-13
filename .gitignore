@@ -1,0 +1,7 @@
+.env
+authentication-service-twtg/
+catalogs-service-twtg/
+databases/
+orm-twtg/
+odm-twtg/
+secure-service-twtg/

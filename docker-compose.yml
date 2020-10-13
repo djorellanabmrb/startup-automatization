@@ -1,0 +1,179 @@
+version: "3.7"
+
+volumes:
+    postgres-data:
+    mongo-data:
+
+networks:
+    private-network:
+        driver: bridge
+
+services:
+    ingress:
+        image: traefik:v2.0
+        command:
+            - "--api.insecure=true"
+            - "--providers.docker"
+            - "--providers.docker.watch=true"
+            - "--providers.docker.exposedByDefault=false"
+            - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+            - "--providers.docker.network=private-network"
+            - "--entryPoints.web.address=:80"
+        ports:
+            - "80:80"
+            - "8080:8080"
+        networks:
+            - private-network
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+    postgis:
+        build: ./databases/postgis
+        volumes:
+            - postgres-data:/var/lib/postgresql/data
+        environment:
+            - POSTGRES_USER=${SEQUELIZE_USERNAME}
+            - POSTGRES_PASSWORD=${SEQUELIZE_PASSWORD}
+            - POSTGRES_DB=${SEQUELIZE_DATABASE}
+        ports:
+            - ${SEQUELIZE_PORT}:5432
+        networks:
+            - private-network
+    mongodb:
+        image: mongo:latest
+        restart: always
+        environment:
+            - MONGO_INITDB_ROOT_USERNAME=${MONGO_USERNAME}
+            - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+            - MONGO_INITDB_DATABASE=${MONGO_DATABASE}
+        ports:
+            - 27017:27017
+        volumes:
+            - ./databases/mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+            - mongo-data:/data/db
+        networks:
+            - private-network
+    orm-twtg:
+        build:
+            context: ./orm-twtg
+        environment:
+            - SEQUELIZE_USERNAME=${SEQUELIZE_USERNAME}
+            - SEQUELIZE_PASSWORD=${SEQUELIZE_PASSWORD}
+            - SEQUELIZE_DATABASE=${SEQUELIZE_DATABASE}
+            - SEQUELIZE_HOST=${SEQUELIZE_HOST}
+            - SEQUELIZE_DIALECT=${SEQUELIZE_DIALECT}
+            - SEQUELIZE_PORT=${SEQUELIZE_PORT}
+            - WAIT_HOSTS=postgis:5432
+            - WAIT_HOSTS_TIMEOUT=300
+            - WAIT_SLEEP_INTERVAL=30
+            - WAIT_HOST_CONNECT_TIMEOUT=30
+        networks:
+            - private-network
+        depends_on:
+            - postgis
+    authentication:
+        build:
+            context: ./authentication-service-twtg
+        environment:
+            - API_AUTHENTICATION_PORT=${API_AUTHENTICATION_PORT}
+            - PAGINATION_LIMIT=${PAGINATION_LIMIT}
+            - PAGINATION_SORT=${PAGINATION_SORT}
+            - SEQUELIZE_USERNAME=${SEQUELIZE_USERNAME}
+            - SEQUELIZE_PASSWORD=${SEQUELIZE_PASSWORD}
+            - SEQUELIZE_DATABASE=${SEQUELIZE_DATABASE}
+            - SEQUELIZE_HOST=${SEQUELIZE_HOST}
+            - SEQUELIZE_DIALECT=${SEQUELIZE_DIALECT}
+            - SEQUELIZE_PORT=${SEQUELIZE_PORT}
+            - SSH_PRIVATE=${SSH_PRIVATE}
+            - SSH_PUBLIC=${SSH_PUBLIC}
+            - SSH_KNOWN_HOSTS=${SSH_KNOWN_HOSTS}
+            - WAIT_HOSTS=postgis:5432
+            - WAIT_HOSTS_TIMEOUT=300
+            - WAIT_SLEEP_INTERVAL=30
+            - WAIT_HOST_CONNECT_TIMEOUT=30
+        networks:
+            - private-network
+        depends_on:
+            - postgis
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.authentication.rule=Host(`localhost`) && Path(`/authentication/*`)
+            - traefik.http.routers.authentication.entryPoints=web
+            - traefik.http.routers.authentication.service=authentication-service
+            - traefik.http.services.authentication-service.loadbalancer.server.port=${API_AUTHENTICATION_PORT}
+            - traefik.docker.network=private-network
+    catalogs:
+        build:
+            context: ./catalogs-service-twtg
+        environment:
+            - API_CATALOGS_PORT=${API_CATALOGS_PORT}
+            - PAGINATION_LIMIT=${PAGINATION_LIMIT}
+            - PAGINATION_SORT=${PAGINATION_SORT}
+            - SEQUELIZE_USERNAME=${SEQUELIZE_USERNAME}
+            - SEQUELIZE_PASSWORD=${SEQUELIZE_PASSWORD}
+            - SEQUELIZE_DATABASE=${SEQUELIZE_DATABASE}
+            - SEQUELIZE_HOST=${SEQUELIZE_HOST}
+            - SEQUELIZE_DIALECT=${SEQUELIZE_DIALECT}
+            - SEQUELIZE_PORT=${SEQUELIZE_PORT}
+            - SSH_PRIVATE=${SSH_PRIVATE}
+            - SSH_PUBLIC=${SSH_PUBLIC}
+            - SSH_KNOWN_HOSTS=${SSH_KNOWN_HOSTS}
+            - WAIT_HOSTS=postgis:5432
+            - WAIT_HOSTS_TIMEOUT=300
+            - WAIT_SLEEP_INTERVAL=30
+            - WAIT_HOST_CONNECT_TIMEOUT=30
+        networks:
+            - private-network
+        depends_on:
+            - postgis
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.catalogs.rule=PathPrefix(`/catalogs`)
+            - traefik.http.routers.catalogs.entryPoints=web
+            - traefik.http.routers.catalogs.service=catalogs-service
+            - traefik.http.services.catalogs-service.loadbalancer.server.port=${API_CATALOGS_PORT}
+            - traefik.docker.network=private-network
+        ports:
+            - ${API_CATALOGS_PORT}:${API_CATALOGS_PORT}     
+    security:
+        build:
+            context: ./secure-service-twtg
+        environment:
+            - API_SECURITY_PORT=${API_SECURITY_PORT}
+            - FIREBASE_TYPE=${FIREBASE_TYPE}
+            - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+            - FIREBASE_PRIVATE_KEY_ID=${FIREBASE_PRIVATE_KEY_ID}
+            - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
+            - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
+            - FIREBASE_CLIENT_ID=${FIREBASE_CLIENT_ID}
+            - FIREBASE_AUTH_URI=${FIREBASE_AUTH_URI}
+            - FIREBASE_TOKEN_URI${FIREBASE_TOKEN_URI}
+            - FIREBASE_AUTH_PROVIDER_X509_CERT_URL=${FIREBASE_AUTH_PROVIDER_X509_CERT_URL}
+            - FIREBASE_DATABASEURL=${FIREBASE_CLIENT_X509_CERT_URL}
+            - JWT_SECRET=${JWT_SECRET}
+            - JWT_SERVICE_ACCOUNT_EMAIL=${JWT_SERVICE_ACCOUNT_EMAIL}
+            - JWT_EXP_TIME=${JWT_EXP_TIME}
+            - MONGO_USERNAME=${MONGO_USERNAME}
+            - MONGO_PASSWORD=${MONGO_PASSWORD}
+            - MONGO_DATABASE=${MONGO_DATABASE}
+            - MONGO_HOST=${MONGO_HOST}
+            - MONGO_PORT=${MONGO_PORT}
+            - WAIT_HOSTS=mongodb:27017
+            - WAIT_HOSTS_TIMEOUT=300
+            - WAIT_SLEEP_INTERVAL=30
+            - WAIT_HOST_CONNECT_TIMEOUT=30
+            - SSH_PRIVATE=${SSH_PRIVATE}
+            - SSH_PUBLIC=${SSH_PUBLIC}
+            - SSH_KNOWN_HOSTS=${SSH_KNOWN_HOSTS}
+        networks:
+            - private-network
+        depends_on:
+            - mongodb
+        ports:
+            - ${API_SECURITY_PORT}:${API_SECURITY_PORT}            
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.security.rule=Host(`localhost`) && Path(`/security`)
+            - traefik.http.routers.security.entryPoints=web
+            - traefik.http.routers.security.service=security-service
+            - traefik.http.services.security-service.loadbalancer.server.port=${API_SECURITY_PORT}
+            - traefik.docker.network=private-network

@@ -5,3 +5,6 @@ databases/
 orm-twtg/
 odm-twtg/
 secure-service-twtg/
+company-service-twtg/
+middlewares-twtg/
+configs-twtg/

@@ -176,3 +176,31 @@ services:
             - traefik.http.routers.security.service=security-service
             - traefik.http.services.security-service.loadbalancer.server.port=${API_SECURITY_PORT}
             - traefik.docker.network=private-network
+    companies:
+        build:
+            context: ./company-service-twtg
+        environment:
+            - API_COMPANY_PORT=${API_COMPANY_PORT}
+            - SEQUELIZE_USERNAME=${SEQUELIZE_USERNAME}
+            - SEQUELIZE_PASSWORD=${SEQUELIZE_PASSWORD}
+            - SEQUELIZE_DATABASE=${SEQUELIZE_DATABASE}
+            - SEQUELIZE_HOST=${SEQUELIZE_HOST}
+            - SEQUELIZE_DIALECT=${SEQUELIZE_DIALECT}
+            - SEQUELIZE_PORT=${SEQUELIZE_PORT}
+            - WAIT_HOSTS=postgis:5432
+            - WAIT_HOSTS_TIMEOUT=300
+            - WAIT_SLEEP_INTERVAL=30
+            - WAIT_HOST_CONNECT_TIMEOUT=30
+        networks:
+            - private-network
+        depends_on:
+            - postgis
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.companies.rule=PathPrefix(`/companies`)
+            - traefik.http.routers.companies.entryPoints=web
+            - traefik.http.routers.companies.service=companies-service
+            - traefik.http.services.companies-service.loadbalancer.server.port=${API_COMPANY_PORT}
+            - traefik.docker.network=private-network
+        ports:
+            - ${API_COMPANY_PORT}:${API_COMPANY_PORT}  

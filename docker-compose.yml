@@ -20,7 +20,7 @@ services:
             - "--providers.docker.network=private-network"
             - "--entryPoints.web.address=:80"
         ports:
-            - "80:80"
+            - "${TRAEFIK_PORT}:80"
         networks:
             - private-network
         volumes:

@@ -26,7 +26,7 @@ services:
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
     postgis:
-        build: ./databases/postgis
+        build: ./backend-databases/postgis
         volumes:
             - postgres-data:/var/lib/postgresql/data
         environment:
@@ -47,13 +47,13 @@ services:
         ports:
             - 27017:27017
         volumes:
-            - ./databases/mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+            - ./backend-databases/mongo/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
             - mongo-data:/data/db
         networks:
             - private-network
     orm-twtg:
         build:
-            context: ./orm-twtg
+            context: ./backend-orm-twtg
         environment:
             - SEQUELIZE_USERNAME=${SEQUELIZE_USERNAME}
             - SEQUELIZE_PASSWORD=${SEQUELIZE_PASSWORD}
@@ -68,74 +68,10 @@ services:
         networks:
             - private-network
         depends_on:
-            - postgis
-    authentication:
-        build:
-            context: ./authentication-service-twtg
-        environment:
-            - API_AUTHENTICATION_PORT=${API_AUTHENTICATION_PORT}
-            - PAGINATION_LIMIT=${PAGINATION_LIMIT}
-            - PAGINATION_SORT=${PAGINATION_SORT}
-            - SEQUELIZE_USERNAME=${SEQUELIZE_USERNAME}
-            - SEQUELIZE_PASSWORD=${SEQUELIZE_PASSWORD}
-            - SEQUELIZE_DATABASE=${SEQUELIZE_DATABASE}
-            - SEQUELIZE_HOST=${SEQUELIZE_HOST}
-            - SEQUELIZE_DIALECT=${SEQUELIZE_DIALECT}
-            - SEQUELIZE_PORT=${SEQUELIZE_PORT}
-            - SSH_PRIVATE=${SSH_PRIVATE}
-            - SSH_PUBLIC=${SSH_PUBLIC}
-            - SSH_KNOWN_HOSTS=${SSH_KNOWN_HOSTS}
-            - WAIT_HOSTS=postgis:5432
-            - WAIT_HOSTS_TIMEOUT=300
-            - WAIT_SLEEP_INTERVAL=30
-            - WAIT_HOST_CONNECT_TIMEOUT=30
-        networks:
-            - private-network
-        depends_on:
-            - postgis
-        labels:
-            - traefik.enable=true
-            - traefik.http.routers.authentication.rule=PathPrefix(`/authentication`)
-            - traefik.http.routers.authentication.entryPoints=web
-            - traefik.http.routers.authentication.service=authentication-service
-            - traefik.http.services.authentication-service.loadbalancer.server.port=${API_AUTHENTICATION_PORT}
-            - traefik.docker.network=private-network
-    catalogs:
-        build:
-            context: ./catalogs-service-twtg
-        environment:
-            - API_CATALOGS_PORT=${API_CATALOGS_PORT}
-            - PAGINATION_LIMIT=${PAGINATION_LIMIT}
-            - PAGINATION_SORT=${PAGINATION_SORT}
-            - SEQUELIZE_USERNAME=${SEQUELIZE_USERNAME}
-            - SEQUELIZE_PASSWORD=${SEQUELIZE_PASSWORD}
-            - SEQUELIZE_DATABASE=${SEQUELIZE_DATABASE}
-            - SEQUELIZE_HOST=${SEQUELIZE_HOST}
-            - SEQUELIZE_DIALECT=${SEQUELIZE_DIALECT}
-            - SEQUELIZE_PORT=${SEQUELIZE_PORT}
-            - SSH_PRIVATE=${SSH_PRIVATE}
-            - SSH_PUBLIC=${SSH_PUBLIC}
-            - SSH_KNOWN_HOSTS=${SSH_KNOWN_HOSTS}
-            - WAIT_HOSTS=postgis:5432
-            - WAIT_HOSTS_TIMEOUT=300
-            - WAIT_SLEEP_INTERVAL=30
-            - WAIT_HOST_CONNECT_TIMEOUT=30
-        networks:
-            - private-network
-        depends_on:
-            - postgis
-        labels:
-            - traefik.enable=true
-            - traefik.http.routers.catalogs.rule=PathPrefix(`/catalogs`)
-            - traefik.http.routers.catalogs.entryPoints=web
-            - traefik.http.routers.catalogs.service=catalogs-service
-            - traefik.http.services.catalogs-service.loadbalancer.server.port=${API_CATALOGS_PORT}
-            - traefik.docker.network=private-network
-        ports:
-            - ${API_CATALOGS_PORT}:${API_CATALOGS_PORT}     
+            - postgis 
     security:
         build:
-            context: ./secure-service-twtg
+            context: ./backend-security-service-twtg
         environment:
             - API_SECURITY_PORT=${API_SECURITY_PORT}
             - FIREBASE_TYPE=${FIREBASE_TYPE}
@@ -176,31 +112,3 @@ services:
             - traefik.http.routers.security.service=security-service
             - traefik.http.services.security-service.loadbalancer.server.port=${API_SECURITY_PORT}
             - traefik.docker.network=private-network
-    companies:
-        build:
-            context: ./company-service-twtg
-        environment:
-            - API_COMPANY_PORT=${API_COMPANY_PORT}
-            - SEQUELIZE_USERNAME=${SEQUELIZE_USERNAME}
-            - SEQUELIZE_PASSWORD=${SEQUELIZE_PASSWORD}
-            - SEQUELIZE_DATABASE=${SEQUELIZE_DATABASE}
-            - SEQUELIZE_HOST=${SEQUELIZE_HOST}
-            - SEQUELIZE_DIALECT=${SEQUELIZE_DIALECT}
-            - SEQUELIZE_PORT=${SEQUELIZE_PORT}
-            - WAIT_HOSTS=postgis:5432
-            - WAIT_HOSTS_TIMEOUT=300
-            - WAIT_SLEEP_INTERVAL=30
-            - WAIT_HOST_CONNECT_TIMEOUT=30
-        networks:
-            - private-network
-        depends_on:
-            - postgis
-        labels:
-            - traefik.enable=true
-            - traefik.http.routers.companies.rule=PathPrefix(`/companies`)
-            - traefik.http.routers.companies.entryPoints=web
-            - traefik.http.routers.companies.service=companies-service
-            - traefik.http.services.companies-service.loadbalancer.server.port=${API_COMPANY_PORT}
-            - traefik.docker.network=private-network
-        ports:
-            - ${API_COMPANY_PORT}:${API_COMPANY_PORT}  

@@ -133,7 +133,7 @@ services:
             - postgis
         labels:
             - traefik.enable=true
-            - traefik.http.routers.catalogs.rule=PathPrefix(`/catalogs-services`)
+            - traefik.http.routers.catalogs.rule=PathPrefix(`/catalogs-service`)
             - traefik.http.routers.catalogs.entryPoints=web
             - traefik.http.routers.catalogs.service=catalogs-service
             - traefik.http.services.catalogs-service.loadbalancer.server.port=${API_CATALOGS_PORT}
@@ -161,7 +161,7 @@ services:
             - postgis
         labels:
             - traefik.enable=true
-            - traefik.http.routers.companies.rule=PathPrefix(`/companies-services`)
+            - traefik.http.routers.companies.rule=PathPrefix(`/companies-service`)
             - traefik.http.routers.companies.entryPoints=web
             - traefik.http.routers.companies.service=companies-service
             - traefik.http.services.companies-service.loadbalancer.server.port=${API_COMPANY_PORT}

@@ -168,3 +168,30 @@ services:
             - traefik.docker.network=private-network
         ports:
             - ${API_COMPANY_PORT}:${API_COMPANY_PORT}  
+    deliveries-service:
+        build:
+            context: ./backend-api-order
+        environment:
+            - API_DELIVERIES_PORT=${API_DELIVERIES_PORT}
+            - FIREBASE_TYPE=${FIREBASE_TYPE}
+            - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+            - FIREBASE_PRIVATE_KEY_ID=${FIREBASE_PRIVATE_KEY_ID}
+            - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
+            - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
+            - FIREBASE_CLIENT_ID=${FIREBASE_CLIENT_ID}
+            - FIREBASE_AUTH_URI=${FIREBASE_AUTH_URI}
+            - FIREBASE_TOKEN_URI${FIREBASE_TOKEN_URI}
+            - FIREBASE_AUTH_PROVIDER_X509_CERT_URL=${FIREBASE_AUTH_PROVIDER_X509_CERT_URL}
+            - FIREBASE_DATABASEURL=${FIREBASE_CLIENT_X509_CERT_URL}
+            - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+        networks:
+            - private-network
+        ports:
+            - ${API_DELIVERIES_PORT}:${API_DELIVERIES_PORT}            
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.deliveries.rule=PathPrefix(`/deliveries-service`)
+            - traefik.http.routers.deliveries.entryPoints=web
+            - traefik.http.routers.deliveries.service=deliveries-service
+            - traefik.http.services.deliveries-service.loadbalancer.server.port=${API_DELIVERIES_PORT}
+            - traefik.docker.network=private-network

@@ -1,10 +1,10 @@
 .env
 authentication-service-twtg/
-catalogs-service-twtg/
-databases/
-orm-twtg/
+backend-catalogs-service-twtg/
+backend-databases/
+backend-orm-twtg/
 odm-twtg/
 secure-service-twtg/
-company-service-twtg/
+backend-company-service-twtg/
 middlewares-twtg/
 configs-twtg/

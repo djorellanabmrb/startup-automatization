@@ -121,7 +121,7 @@ services:
         build:
             context: ./backend-catalogs-service-twtg
         environment:
-       h     - API_CATALOGS_PORT=${API_CATALOGS_PORT}
+            - API_CATALOGS_PORT=${API_CATALOGS_PORT}
             - SEQUELIZE_USERNAME=${SEQUELIZE_USERNAME}
             - SEQUELIZE_PASSWORD=${SEQUELIZE_PASSWORD}
             - SEQUELIZE_DATABASE=${SEQUELIZE_DATABASE}

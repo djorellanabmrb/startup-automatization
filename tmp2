@@ -19,12 +19,17 @@ services:
             - "--providers.docker.endpoint=unix:///var/run/docker.sock"
             - "--providers.docker.network=private-network"
             - "--entryPoints.web.address=:80"
+            - "--entryPoints.web.address=:443"
+            - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+            - "--certificatesresolvers.myresolver.acme.email=luis@twowheelstogo.com"
+            - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
         ports:
             - "${TRAEFIK_PORT}:80"
         networks:
             - private-network
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock
+            - "./letsencrypt:/letsencrypt"
     postgis:
         build: ./backend-databases/postgis
         volumes:
@@ -107,7 +112,7 @@ services:
             - ${API_SECURITY_PORT}:${API_SECURITY_PORT}            
         labels:
             - traefik.enable=true
-            - traefik.http.routers.security.rule=PathPrefix(`/security`)
+            - traefik.http.routers.security.rule=Host(`devapi.twowheelstogo.com`) && PathPrefix(`/security`)
             - traefik.http.routers.security.entryPoints=web
             - traefik.http.routers.security.service=security-service
             - traefik.http.services.security-service.loadbalancer.server.port=${API_SECURITY_PORT}
@@ -133,7 +138,7 @@ services:
             - postgis
         labels:
             - traefik.enable=true
-            - traefik.http.routers.catalogs.rule=PathPrefix(`/catalogs-service`)
+            - traefik.http.routers.catalogs.rule=Host(`devapi.twowheelstogo.com`) && PathPrefix(`/catalogs-service`)
             - traefik.http.routers.catalogs.entryPoints=web
             - traefik.http.routers.catalogs.service=catalogs-service
             - traefik.http.services.catalogs-service.loadbalancer.server.port=${API_CATALOGS_PORT}
@@ -177,7 +182,7 @@ services:
             - postgis
         labels:
             - traefik.enable=true
-            - traefik.http.routers.companies.rule=PathPrefix(`/companies-service`)
+            - traefik.http.routers.companies.rule=Host(`devapi.twowheelstogo.com`) && PathPrefix(`/companies-service`)
             - traefik.http.routers.companies.entryPoints=web
             - traefik.http.routers.companies.service=companies-service
             - traefik.http.services.companies-service.loadbalancer.server.port=${API_COMPANY_PORT}
@@ -206,7 +211,7 @@ services:
             - ${API_DELIVERIES_PORT}:${API_DELIVERIES_PORT}            
         labels:
             - traefik.enable=true
-            - traefik.http.routers.deliveries.rule=PathPrefix(`/deliveries-service`)
+            - traefik.http.routers.deliveries.rule=Host(`devapi.twowheelstogo.com`) && PathPrefix(`/deliveries-service`)
             - traefik.http.routers.deliveries.entryPoints=web
             - traefik.http.routers.deliveries.service=deliveries-service
             - traefik.http.services.deliveries-service.loadbalancer.server.port=${API_DELIVERIES_PORT}

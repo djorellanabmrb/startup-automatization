@@ -177,6 +177,12 @@ services:
             - FIREBASE_PRIVATE_KEY_ID=${FIREBASE_PRIVATE_KEY_ID}
             - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
             - FIREBASE_TYPE=${FIREBASE_TYPE}
+            - MONGO_USERNAME=${MONGO_USERNAME}
+            - MONGO_PASSWORD=${MONGO_PASSWORD}
+            - MONGO_DATABASE=${MONGO_DATABASE}
+            - MONGO_HOST=${MONGO_HOST}
+            - MONGO_PORT=${MONGO_PORT}
+            - GOOGLE_KEY=${GOOGLE_MAPS_API_KEY}
         networks:
             - private-network
         depends_on:

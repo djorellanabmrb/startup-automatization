@@ -3,6 +3,7 @@ version: "3.7"
 volumes:
     postgres-data:
     mongo-data:
+    redis-data:
 
 networks:
     private-network:
@@ -55,6 +56,16 @@ services:
             - mongo-data:/data/db
         networks:
             - private-network
+    redis:
+        redis:
+        image: redis:latest
+        restart: always
+        ports:
+            - ${REDIS_PORT}:6379
+        volumes:
+            - redis-data:/usr/local/etc/redis
+        networks:
+            - private-network 
     orm-twtg:
         build:
             context: ./backend-orm-twtg
@@ -224,4 +235,40 @@ services:
             - traefik.http.routers.deliveries.service=deliveries-service
             - traefik.http.services.deliveries-service.loadbalancer.server.port=${API_DELIVERIES_PORT}
             - traefik.http.routers.deliveries.tls.certresolver=myresolver
+            - traefik.docker.network=private-network
+    orders-service:
+        build:
+            context: ./backend-orders-service-twtg
+        environment:
+            - API_ORDER_PORT=${API_ORDER_PORT}
+            - GOOGLE_KEY=${GOOGLE_KEY}
+            - MONGO_USERNAME=${MONGO_USERNAME}
+            - MONGO_PASSWORD=${MONGO_PASSWORD}
+            - MONGO_DATABASE=${MONGO_DATABASE}
+            - MONGO_HOST=${MONGO_HOST}
+            - MONGO_PORT=${MONGO_PORT}
+            - FIREBASE_TYPE=${FIREBASE_TYPE}
+            - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+            - FIREBASE_PRIVATE_KEY_ID=${FIREBASE_PRIVATE_KEY_ID}
+            - FIREBASE_PRIVATE_KEY=${FIREBASE_PRIVATE_KEY}
+            - FIREBASE_CLIENT_EMAIL=${FIREBASE_CLIENT_EMAIL}
+            - FIREBASE_CLIENT_ID=${FIREBASE_CLIENT_ID}
+            - FIREBASE_AUTH_URI=${FIREBASE_AUTH_URI}
+            - FIREBASE_TOKEN_URI${FIREBASE_TOKEN_URI}
+            - FIREBASE_AUTH_PROVIDER_X509_CERT_URL=${FIREBASE_AUTH_PROVIDER_X509_CERT_URL}
+            - FIREBASE_DATABASEURL=${FIREBASE_CLIENT_X509_CERT_URL}
+            - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+            - REDIS_HOST=${REDIS_HOST}
+            - REDIS_PORT=${REDIS_PORT}
+        networks:
+            - private-network
+        ports:
+            - ${API_ORDER_PORT}:${API_ORDER_PORT}            
+        labels:
+            - traefik.enable=true
+            - traefik.http.routers.orders.rule=Host(`devapi.twowheelstogo.com`) && PathPrefix(`/orders-service`)
+            - traefik.http.routers.orders.entryPoints=web
+            - traefik.http.routers.orders.service=orders-service
+            - traefik.http.services.orders-service.loadbalancer.server.port=${API_ORDER_PORT}
+            - traefik.http.routers.orders.tls.certresolver=myresolver
             - traefik.docker.network=private-network

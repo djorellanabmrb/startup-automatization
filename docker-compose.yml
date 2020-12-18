@@ -259,6 +259,10 @@ services:
             - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
             - REDIS_HOST=${REDIS_HOST}
             - REDIS_PORT=${REDIS_PORT}
+            - WAIT_HOSTS=mongodb:27017, redis:6379
+            - WAIT_HOSTS_TIMEOUT=300
+            - WAIT_SLEEP_INTERVAL=30
+            - WAIT_HOST_CONNECT_TIMEOUT=30
         networks:
             - private-network
         ports:
